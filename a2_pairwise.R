@@ -66,6 +66,18 @@ ggplot_build(p)$data
 
 
 
+data %>% 
+  group_by(MALE) %>% 
+  summarise(quantile(CIG, 0.25),median(CIG), quantile(CIG, 0.75))
+
+
+data %>% 
+  group_by(MALE) %>% 
+  summarise(quantile(SBP, 0.25),median(SBP), quantile(DBP, 0.75))
+
+
+
+
 
 
 ggplot(data_long[data_long$var != "CIG",], aes(value,y = var,  fill = cig_cat))+

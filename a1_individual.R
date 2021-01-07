@@ -19,10 +19,18 @@ library(ggplot2)
 library(gridExtra)
 library(haven)
 library(dplyr)
+library(mgcv)
 
 
 data <- read_sav("12_framdata.sav")
 
+# remove NA in CIG for one observation
+data <- na.omit(data)
+data <- data[, c("AGE", "SBP", "DBP", "CHOL", "CIG", "MALE", "cig_cat")]
+
+
+data$cig_cat <- factor(data$cig_cat)
+data$MALE <- factor(data$MALE)
 
 # You are asked to answer the following questions by analyzing the data
 
@@ -32,13 +40,7 @@ data <- read_sav("12_framdata.sav")
 # a. Present suitable descriptive measures for all the variables individually,
 # as well as for their (pairwise) associations
 
-# remove NA in CIG for one observation
-data <- na.omit(data)
-data <- data[, c("AGE", "SBP", "DBP", "CHOL", "CIG", "MALE", "cig_cat")]
 
-
-data$cig_cat <- factor(data$cig_cat)
-data$MALE <- factor(data$MALE)
 
 
 summary(data)
@@ -156,6 +158,27 @@ ggplot(data, aes(CHOL))+
   geom_density() +
   ylab("Density")
 ggsave("plots/chol_density.png", width = 13, height = 7, units = "cm")
+
+
+
+chol_dens <- with(density(data$CHOL), data.frame(x, y))
+
+p_chol <- ggplot(data = chol_dens, mapping = aes(x = x, y = y)) +
+  geom_area(aes(x = ifelse(x<200 , x, 0)), fill = "#1a9641", alpha = 0.9) +
+  geom_area(aes(x = ifelse(x>200 & x<=240 , x, 0)), fill = "#a6d96a", alpha = 0.9) +
+  geom_area(aes(x = ifelse(x>240 & x<=300 , x, 0)), fill = "#fdae61", alpha = 0.9) +
+  geom_area(aes(x = ifelse(x>300, x, 0)), fill = "#d7191c", alpha = 0.9) +
+  geom_line() +
+  geom_vline(linetype="dashed", xintercept = 200)+
+  geom_vline(linetype="dashed", xintercept = 240)+
+  geom_vline(linetype="dashed", xintercept = 300)+
+  scale_y_continuous(name = "Density", limits = c(0, max(chol_dens$y)))+
+  scale_x_continuous(name = "CHOL", limits = c(min(chol_dens[chol_dens$y > 0,"x"]),
+                                              max(chol_dens[chol_dens$y > 0,"x"]))) 
+
+
+ggsave("plots/chol_density.png", p_chol, width = 13, height = 7, units = "cm")
+
 
 
 
